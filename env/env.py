@@ -37,4 +37,32 @@ class FXEnv(gym.Env):
         self.totalDays = len(self.data) // loaddata.DAY
     
     def reset(self):
+        self.balance = self.initial_balance
+        self.net_worth = self.initial_balance
+        self.current_day += 1
+        
+        if self.current_day >= self.totalDays:
+            self.current_day = 1
+            self.year += 1
+            if self.year > self.maxyear:
+                self.year = 2011
+            self.data = loaddata.load_data(self.pair, self.year)
+
+        self.current_min = 0
+        self.mins_left = loaddata.DAY
+        self.trades = []
+        self.anchor = loaddata.DAY * self.current_day
+        self.cur_step = self.anchor + self.current_min
+        self.prev_price = 0
+        self.prev_action = 0
+        self.returns = np.zeros((self.look_back))
+        self.private = np.zeros((self.look_back, 2))
+        self.trades = []
+        self.visualization = None
+
+        return self._next_observation()
+
+    def _next_observation(self):
+        window_size = self.group_by
+        scale_df = self.data.iloc[self.cur_step - window_size + 1 : self.cur_step + 1]
         
